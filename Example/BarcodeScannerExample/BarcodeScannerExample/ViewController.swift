@@ -28,7 +28,7 @@ class ViewController: UIViewController {
     button.center = view.center
   }
 
-  func buttonDidPress() {
+  @objc func buttonDidPress() {
     let controller = BarcodeScannerController()
     controller.codeDelegate = self
     controller.errorDelegate = self

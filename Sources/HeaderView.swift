@@ -1,7 +1,7 @@
 import UIKit
 
 protocol HeaderViewDelegate: class {
-  func headerViewDidPressClose(_ headerView: HeaderView)
+    func headerViewDidPressClose(_ headerView: HeaderView)
 }
 
 /**
@@ -9,77 +9,81 @@ protocol HeaderViewDelegate: class {
  */
 class HeaderView: UIView {
 
-  /// Title label.
-  lazy var label: UILabel = {
-    let label = UILabel()
-    label.text = Title.text
-    label.font = Title.font
-    label.textColor = Title.color
-    label.backgroundColor = Title.backgroundColor
-    label.numberOfLines = 1
-    label.textAlignment = .center
-    return label
-  }()
+    /// Title label.
+    lazy var label: UILabel = {
+        let label = UILabel()
+        label.text = Title.text
+        label.font = Title.font
+        label.textColor = Title.color
+        label.backgroundColor = Title.backgroundColor
+        label.numberOfLines = 1
+        label.textAlignment = .center
+        return label
+    }()
 
-  /// Close button.
-  lazy var button: UIButton = {
-    let button = UIButton(type: .system)
-    button.setTitle(CloseButton.text, for: UIControlState())
-    button.titleLabel?.font = CloseButton.font
-    button.tintColor = CloseButton.color
-    button.addTarget(self, action: #selector(buttonDidPress), for: .touchUpInside)
+    /// Close button.
+    lazy var button: UIButton = {
+        let button = UIButton(type: .system)
+        button.setTitle(CloseButton.text, for: UIControlState())
+        button.titleLabel?.font = CloseButton.font
+        button.tintColor = CloseButton.color
+        button.addTarget(self, action: #selector(buttonDidPress), for: .touchUpInside)
 
-    return button
-  }()
+        return button
+    }()
 
-  /// Header view delegate.
-  weak var delegate: HeaderViewDelegate?
+    /// Header view delegate.
+    weak var delegate: HeaderViewDelegate?
 
-  // MARK: - Initialization
+    // MARK: - Initialization
 
-  /**
-   Creates a new instance of `HeaderView`.
+    /**
+     Creates a new instance of `HeaderView`.
 
-   - Parameter frame: View frame.
-   */
-  override init(frame: CGRect) {
-    super.init(frame: frame)
+     - Parameter frame: View frame.
+     */
+    override init(frame: CGRect) {
 
-    backgroundColor = Title.backgroundColor
+        super.init(frame: frame)
 
-    [label, button].forEach {
-      addSubview($0)
+        backgroundColor = Title.backgroundColor
+
+        [ label, button ].forEach {
+            addSubview($0)
+        }
     }
-  }
 
-  required init?(coder aDecoder: NSCoder) {
-    fatalError("init(coder:) has not been implemented")
-  }
+    required init?(coder aDecoder: NSCoder) {
 
-  // MARK: - Layout
+        fatalError("init(coder:) has not been implemented")
+    }
 
-  override func layoutSubviews() {
-    super.layoutSubviews()
+    // MARK: - Layout
 
-    let padding: CGFloat = 8
-    let labelHeight: CGFloat = 40
+    override func layoutSubviews() {
 
-    button.sizeToFit()
+        super.layoutSubviews()
 
-    button.frame.origin = CGPoint(x: 15,
-      y: ((frame.height - button.frame.height) / 2) + padding)
+        let padding: CGFloat = 8
+        let labelHeight: CGFloat = 40
 
-    label.frame = CGRect(
-      x: 0, y: ((frame.height - labelHeight) / 2) + padding,
-      width: frame.width, height: labelHeight)
-  }
+        button.sizeToFit()
 
-  // MARK: - Actions
+        button.frame.origin = CGPoint(x: 15,
+                                      y: ((frame.height - button.frame.height) / 2) + padding)
 
-  /**
-   Close button action handler.
-   */
-  func buttonDidPress() {
-    delegate?.headerViewDidPressClose(self)
-  }
+        label.frame = CGRect(
+                x: 0, y: ((frame.height - labelHeight) / 2) + padding,
+                width: frame.width, height: labelHeight)
+    }
+
+    // MARK: - Actions
+
+    /**
+     Close button action handler.
+     */
+    @objc func buttonDidPress() {
+
+        delegate?.headerViewDidPressClose(self)
+    }
 }
