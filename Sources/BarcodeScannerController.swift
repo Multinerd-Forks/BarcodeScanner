@@ -4,17 +4,11 @@ import AVFoundation
 // MARK: - Delegates
 
 /// Delegate to handle the captured code.
-public protocol BarcodeScannerCodeDelegate: class {
+public protocol BarcodeScannerDelegate: class {
     func barcodeScanner(_ controller: BarcodeScannerController, didCaptureCode code: String, type: String)
-}
 
-/// Delegate to report errors.
-public protocol BarcodeScannerErrorDelegate: class {
     func barcodeScanner(_ controller: BarcodeScannerController, didReceiveError error: Error)
-}
 
-/// Delegate to dismiss barcode scanner when the close button has been pressed.
-public protocol BarcodeScannerDismissalDelegate: class {
     func barcodeScannerDidDismiss(_ controller: BarcodeScannerController)
 }
 
@@ -154,13 +148,7 @@ open class BarcodeScannerController: UIViewController {
     public var isOneTimeSearch = true
 
     /// Delegate to handle the captured code.
-    public weak var codeDelegate: BarcodeScannerCodeDelegate?
-
-    /// Delegate to report errors.
-    public weak var errorDelegate: BarcodeScannerErrorDelegate?
-
-    /// Delegate to dismiss barcode scanner when the close button has been pressed.
-    public weak var dismissalDelegate: BarcodeScannerDismissalDelegate?
+    public weak var delegate: BarcodeScannerDelegate?
 
     /// Flag to lock session from capturing.
     var locked = false
@@ -276,7 +264,7 @@ open class BarcodeScannerController: UIViewController {
             let input = try AVCaptureDeviceInput(device: captureDevice)
             captureSession.addInput(input)
         } catch {
-            errorDelegate?.barcodeScanner(self, didReceiveError: error)
+            delegate?.barcodeScanner(self, didReceiveError: error)
         }
 
         let output = AVCaptureMetadataOutput()
@@ -479,7 +467,7 @@ extension BarcodeScannerController: AVCaptureMetadataOutputObjectsDelegate {
         }
 
         animateFlash(whenProcessing: isOneTimeSearch)
-        codeDelegate?.barcodeScanner(self, didCaptureCode: code, type: metadataObj.type.rawValue)
+        delegate?.barcodeScanner(self, didCaptureCode: code, type: metadataObj.type.rawValue)
     }
 }
 
@@ -489,6 +477,6 @@ extension BarcodeScannerController: HeaderViewDelegate {
 
     func headerViewDidPressClose(_ headerView: HeaderView) {
 
-        dismissalDelegate?.barcodeScannerDidDismiss(self)
+        delegate?.barcodeScannerDidDismiss(self)
     }
 }

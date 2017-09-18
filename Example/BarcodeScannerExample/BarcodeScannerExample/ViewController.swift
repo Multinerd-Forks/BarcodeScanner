@@ -30,15 +30,13 @@ class ViewController: UIViewController {
 
   @objc func buttonDidPress() {
     let controller = BarcodeScannerController()
-    controller.codeDelegate = self
-    controller.errorDelegate = self
-    controller.dismissalDelegate = self
+    controller.delegate = self
 
     present(controller, animated: true, completion: nil)
   }
 }
 
-extension ViewController: BarcodeScannerCodeDelegate {
+extension ViewController: BarcodeScannerDelegate {
 
   func barcodeScanner(_ controller: BarcodeScannerController, didCaptureCode code: String, type: String) {
     print(code)
@@ -49,16 +47,10 @@ extension ViewController: BarcodeScannerCodeDelegate {
       controller.resetWithError()
     }
   }
-}
-
-extension ViewController: BarcodeScannerErrorDelegate {
 
   func barcodeScanner(_ controller: BarcodeScannerController, didReceiveError error: Error) {
     print(error)
   }
-}
-
-extension ViewController: BarcodeScannerDismissalDelegate {
 
   func barcodeScannerDidDismiss(_ controller: BarcodeScannerController) {
     controller.dismiss(animated: true, completion: nil)
