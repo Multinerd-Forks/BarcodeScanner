@@ -5,7 +5,7 @@ import AVFoundation
 
 /// Delegate to handle the captured code.
 public protocol BarcodeScannerDelegate: class {
-    func barcodeScanner(_ controller: BarcodeScannerController, didCaptureCode code: String, type: String)
+    func barcodeScanner(_ controller: BarcodeScannerController, didCaptureItem item: ScannedItem)
 
     func barcodeScanner(_ controller: BarcodeScannerController, didReceiveError error: Error)
 
@@ -22,7 +22,12 @@ public protocol BarcodeScannerDelegate: class {
  - Not found error message
  */
 open class BarcodeScannerController: UIViewController {
-
+    
+    var input: AVCaptureDeviceInput!
+    lazy var output = AVCaptureMetadataOutput()
+    lazy var stillOutput = AVCaptureStillImageOutput()
+    
+    
     /// Video capture device.
     lazy var captureDevice: AVCaptureDevice = AVCaptureDevice.default(for: AVMediaType.video)!
 
@@ -146,6 +151,9 @@ open class BarcodeScannerController: UIViewController {
     /// When the flag is set to `true` controller returns a captured code
     /// and waits for the next reset action.
     public var isOneTimeSearch = true
+    
+
+    public var willSaveImage = true
 
     /// Delegate to handle the captured code.
     public weak var delegate: BarcodeScannerDelegate?
@@ -261,14 +269,17 @@ open class BarcodeScannerController: UIViewController {
     func setupSession() {
 
         do {
-            let input = try AVCaptureDeviceInput(device: captureDevice)
-            captureSession.addInput(input)
+            input = try AVCaptureDeviceInput(device: captureDevice)
+            if captureSession.canAddInput(input!) { captureSession.addInput(input!) }
         } catch {
             delegate?.barcodeScanner(self, didReceiveError: error)
         }
 
-        let output = AVCaptureMetadataOutput()
-        captureSession.addOutput(output)
+
+        if captureSession.canAddOutput(output) { captureSession.addOutput(output) }
+        if captureSession.canAddOutput(stillOutput) { captureSession.addOutput(stillOutput) }
+        
+        
         output.setMetadataObjectsDelegate(self, queue: DispatchQueue.main)
         output.metadataObjectTypes = metadata
         videoPreviewLayer?.session = captureSession
@@ -432,6 +443,33 @@ open class BarcodeScannerController: UIViewController {
 
         torchMode = torchMode.next
     }
+    
+    
+    
+    func captureImage(forCode code: String, forType type: AVMetadataObject.ObjectType) {
+        
+        let stillImageConnection = connectionWithMediaType(mediaType: .video, connections: stillOutput.connections)
+        stillOutput.captureStillImageAsynchronously(from: stillImageConnection!, completionHandler: { [weak self] (imageDataSampleBuffer, error) -> Void in
+            guard let `self` = self else { return }
+            guard let buffer = imageDataSampleBuffer else { return }
+            guard let imageData = AVCaptureStillImageOutput.jpegStillImageNSDataRepresentation(buffer) else { return }
+            
+            let item = ScannedItem(code: code, type: type, image: UIImage(data: imageData)!)
+            self.animateFlash(whenProcessing: self.isOneTimeSearch)
+            self.delegate?.barcodeScanner(self, didCaptureItem: item)
+        })
+    }
+    
+    func connectionWithMediaType(mediaType: AVMediaType, connections:[AVCaptureConnection]) -> AVCaptureConnection? {
+        for connection in connections {
+            for port in connection.inputPorts {
+                if port.mediaType == mediaType {
+                    return connection
+                }
+            }
+        }
+        return nil
+    } 
 }
 
 // MARK: - AVCaptureMetadataOutputObjectsDelegate
@@ -465,10 +503,22 @@ extension BarcodeScannerController: AVCaptureMetadataOutputObjectsDelegate {
         if metadataObj.type == AVMetadataObject.ObjectType.ean13 && code.hasPrefix("0") {
             code = String(code.suffix(12))
         }
+        
+        
+        if willSaveImage {
+            captureImage(forCode: code, forType: metadataObj.type)
+        } else {
+            let item = ScannedItem(code: code, type: metadataObj.type, image: nil)
+            animateFlash(whenProcessing: isOneTimeSearch)
+            delegate?.barcodeScanner(self, didCaptureItem: item)
+        }
 
-        animateFlash(whenProcessing: isOneTimeSearch)
-        delegate?.barcodeScanner(self, didCaptureCode: code, type: metadataObj.type.rawValue)
+        
     }
+    
+    
+    
+
 }
 
 // MARK: - HeaderViewDelegate
