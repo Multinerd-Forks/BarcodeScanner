@@ -4,7 +4,7 @@ import AVFoundation
 // MARK: - Configurations
 
 public struct Title {
-    public static var text = localizedString("SCAN_BARCODE_TITLE")
+    public static var text = "Scan barcode"
 
     public static var font = UIFont.boldSystemFont(ofSize: 17)
 
@@ -14,7 +14,7 @@ public struct Title {
 }
 
 public struct CloseButton {
-    public static var text = localizedString("BUTTON_CLOSE")
+    public static var text = "Close"
 
     public static var font = UIFont.boldSystemFont(ofSize: 17)
 
@@ -22,7 +22,7 @@ public struct CloseButton {
 }
 
 public struct SettingsButton {
-    public static var text = localizedString("BUTTON_SETTINGS")
+    public static var text = "Settings"
 
     public static var font = UIFont.boldSystemFont(ofSize: 17)
 
@@ -30,13 +30,13 @@ public struct SettingsButton {
 }
 
 public struct Info {
-    public static var text = localizedString("INFO_DESCRIPTION_TEXT")
+    public static var text = "Place the barcode within the window to scan. The search will start automatically."
 
-    public static var loadingText = localizedString("INFO_LOADING_TITLE")
+    public static var loadingText = "Looking for your product..."
 
-    public static var notFoundText = localizedString("NO_PRODUCT_ERROR_TITLE")
+    public static var notFoundText = "No product found."
 
-    public static var settingsText = localizedString("ASK_FOR_PERMISSION_TEXT")
+    public static var settingsText = "In order to scan barcodes you have to allow camera under your settings."
 
     public static var font = UIFont.boldSystemFont(ofSize: 14)
 
