@@ -500,15 +500,17 @@ extension BarcodeScannerController: AVCaptureMetadataOutputObjectsDelegate {
          The Operating System has no way to recognize that this UPC-A label that was passed to it by the scanner device
          was initially an EAN-13 label beginning with a zero.
          */
-        if metadataObj.type == AVMetadataObject.ObjectType.ean13 && code.hasPrefix("0") {
+        let type = metadataObj.type
+        if type == AVMetadataObject.ObjectType.ean13 && code.hasPrefix("0") {
             code = String(code.suffix(12))
+            type = AVMetadataObject.ObjectType.upca
         }
         
         
         if willSaveImage {
-            captureImage(forCode: code, forType: metadataObj.type)
+            captureImage(forCode: code, forType: type)
         } else {
-            let item = ScannedItem(code: code, type: metadataObj.type, image: nil)
+            let item = ScannedItem(code: code, type: type, image: nil)
             animateFlash(whenProcessing: isOneTimeSearch)
             delegate?.barcodeScanner(self, didCaptureItem: item)
         }

@@ -100,3 +100,9 @@ public var metadata = [
     AVMetadataObject.ObjectType.aztec,
     AVMetadataObject.ObjectType.itf14
 ]
+
+
+extension AVMetadataObject.ObjectType {
+    
+    public static let upca: AVMetadataObject.ObjectType = "org.gs1.UPC-A"
+}
