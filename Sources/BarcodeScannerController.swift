@@ -4,12 +4,12 @@ import AVFoundation
 // MARK: - Delegates
 
 /// Delegate to handle the captured code.
+
 public protocol BarcodeScannerDelegate: class {
     func barcodeScanner(_ controller: BarcodeScannerController, didCaptureItem item: ScannedItem)
 
     func barcodeScanner(_ controller: BarcodeScannerController, didReceiveError error: Error)
 
-    func barcodeScannerDidDismiss(_ controller: BarcodeScannerController)
 }
 
 // MARK: - Controller
@@ -34,9 +34,6 @@ open class BarcodeScannerController: UIViewController {
     /// Capture session.
     lazy var captureSession: AVCaptureSession = AVCaptureSession()
 
-    /// Header view with title and close button.
-    lazy var headerView: HeaderView = HeaderView()
-
     /// Information view with description label.
     lazy var infoView: InfoView = InfoView()
 
@@ -60,22 +57,6 @@ open class BarcodeScannerController: UIViewController {
         view.layer.masksToBounds = false
 
         return view
-    }()
-
-    /// Button that opens settings to allow camera usage.
-    lazy var settingsButton: UIButton = { [unowned self] in
-        let button = UIButton(type: .system)
-        let title = NSAttributedString(string: SettingsButton.text,
-                                       attributes: [
-                                           NSAttributedStringKey.font: SettingsButton.font,
-                                           NSAttributedStringKey.foregroundColor: SettingsButton.color,
-                                       ])
-
-        button.setAttributedTitle(title, for: UIControlState())
-        button.sizeToFit()
-        button.addTarget(self, action: #selector(settingsButtonDidPress), for: .touchUpInside)
-
-        return button
     }()
 
     /// Video preview layer.
@@ -185,14 +166,13 @@ open class BarcodeScannerController: UIViewController {
 
         view.layer.addSublayer(videoPreviewLayer)
 
-        [ infoView, headerView, settingsButton, flashButton, focusView ].forEach {
+        [ infoView, flashButton, focusView ].forEach {
             view.addSubview($0)
             view.bringSubview(toFront: $0)
         }
 
         torchMode = .off
         focusView.isHidden = true
-        headerView.delegate = self
 
         setupCamera()
 
@@ -205,14 +185,18 @@ open class BarcodeScannerController: UIViewController {
     open override func viewWillAppear(_ animated: Bool) {
 
         super.viewWillAppear(animated)
-
-        headerView.isHidden = !isBeingPresented
     }
 
     open override func viewDidAppear(_ animated: Bool) {
 
         super.viewDidAppear(animated)
         animateFocusView()
+        startScan()
+    }
+    
+    open override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        stopScan()
     }
 
     open override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
@@ -247,18 +231,10 @@ open class BarcodeScannerController: UIViewController {
         if authorizationStatus == .authorized {
             setupSession()
             status = Status(state: .scanning)
-        } else if authorizationStatus == .notDetermined {
-            AVCaptureDevice.requestAccess(for: AVMediaType.video,
-                                          completionHandler: { (granted: Bool) -> Void in
-                                              DispatchQueue.main.async {
-                                                  if granted {
-                                                      self.setupSession()
-                                                  }
+        }
 
-                                                  self.status = granted ? Status(state: .scanning) : Status(state: .unauthorized)
-                                              }
-                                          })
-        } else {
+        
+        else {
             status = Status(state: .unauthorized)
         }
     }
@@ -309,6 +285,20 @@ open class BarcodeScannerController: UIViewController {
         status = Status(state: .scanning, animated: animated)
     }
 
+    
+    public func startScan() {
+        if !captureSession.isRunning {
+            captureSession.startRunning()
+        }
+    }
+    
+    public func stopScan()  {
+        if captureSession.isRunning {
+            captureSession.stopRunning()
+        }
+    }
+
+
     /**
      Resets the current state.
      */
@@ -325,14 +315,12 @@ open class BarcodeScannerController: UIViewController {
 
         focusView.alpha = alpha
         flashButton.alpha = alpha
-        settingsButton.isHidden = status.state != .unauthorized
     }
 
     // MARK: - Layout
     func setupFrame() {
 
-        headerView.frame = CGRect(x: 0, y: 0, width: view.frame.width, height: 64)
-        flashButton.frame = CGRect(x: view.frame.width - 50, y: 73, width: 37, height: 37)
+        flashButton.frame = CGRect(x: view.frame.width - 50, y: 0, width: 37, height: 37)
         infoView.frame = infoFrame
 
         if let videoPreviewLayer = videoPreviewLayer {
@@ -353,9 +341,6 @@ open class BarcodeScannerController: UIViewController {
         } else {
             center(subview: focusView, inSize: CGSize(width: 218, height: 150))
         }
-        center(subview: settingsButton, inSize: CGSize(width: 150, height: 50))
-
-        headerView.isHidden = !isBeingPresented
     }
 
     /**
@@ -390,9 +375,7 @@ open class BarcodeScannerController: UIViewController {
         view.bringSubview(toFront: flashView)
 
         UIView.animate(withDuration: 0.2,
-                       animations: {
-                           flashView.alpha = 0.0
-                       },
+                       animations: { flashView.alpha = 0.0  },
                        completion: { _ in
                            flashView.removeFromSuperview()
 
@@ -423,18 +406,6 @@ open class BarcodeScannerController: UIViewController {
     }
 
     // MARK: - Actions
-
-    /**
-     Opens setting to allow camera usage.
-     */
-    @objc func settingsButtonDidPress() {
-
-        DispatchQueue.main.async {
-            if let settingsURL = URL(string: UIApplicationOpenSettingsURLString) {
-                UIApplication.shared.openURL(settingsURL)
-            }
-        }
-    }
 
     /**
      Sets the next torch mode.
@@ -491,21 +462,21 @@ extension BarcodeScannerController: AVCaptureMetadataOutputObjectsDelegate {
             locked = true
         }
 
-        /* See: https://stackoverflow.com/questions/22767584/ios7-barcode-scanner-api-adds-a-zero-to-upca-barcode-format
+        /*
+         See: https://stackoverflow.com/questions/22767584/ios7-barcode-scanner-api-adds-a-zero-to-upca-barcode-format
          According to the Uniform Code Council, an EAN-13 barcode beginning with a zero is by definition a 12-digit
          UPC-A barcode. To follow this rule, when a scanner device reads an EAN-13 barcode beginning with a zero, drops
          the leading 0, truncates the barcode to 12 digits and appends the UPC-A (instead of EAN-13) type, before
          passing to the Operating System.
-
+         
          The Operating System has no way to recognize that this UPC-A label that was passed to it by the scanner device
          was initially an EAN-13 label beginning with a zero.
          */
-        let type = metadataObj.type
+        var type = metadataObj.type
         if type == AVMetadataObject.ObjectType.ean13 && code.hasPrefix("0") {
             code = String(code.suffix(12))
-            type = AVMetadataObject.ObjectType.upca
+//            type = AVMetadataObject.ObjectType.upca
         }
-        
         
         if willSaveImage {
             captureImage(forCode: code, forType: type)
@@ -523,12 +494,3 @@ extension BarcodeScannerController: AVCaptureMetadataOutputObjectsDelegate {
 
 }
 
-// MARK: - HeaderViewDelegate
-
-extension BarcodeScannerController: HeaderViewDelegate {
-
-    func headerViewDidPressClose(_ headerView: HeaderView) {
-
-        delegate?.barcodeScannerDidDismiss(self)
-    }
-}

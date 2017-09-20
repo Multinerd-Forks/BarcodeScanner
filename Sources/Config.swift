@@ -21,13 +21,7 @@ public struct CloseButton {
     public static var color = UIColor.black
 }
 
-public struct SettingsButton {
-    public static var text = "Settings"
 
-    public static var font = UIFont.boldSystemFont(ofSize: 17)
-
-    public static var color = UIColor.white
-}
 
 public struct Info {
     public static var text = "Place the barcode within the window to scan. The search will start automatically."
@@ -104,5 +98,5 @@ public var metadata = [
 
 extension AVMetadataObject.ObjectType {
     
-    public static let upca: AVMetadataObject.ObjectType = "org.gs1.UPC-A"
+    public static let upca: AVMetadataObject.ObjectType = AVMetadataObject.ObjectType(rawValue: "org.gs1.UPC-A")
 }

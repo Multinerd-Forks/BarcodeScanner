@@ -59,11 +59,11 @@ class InfoView: UIVisualEffectView {
     /**
      Creates a new instance of `InfoView`.
      */
-    init() {
-
-        let blurEffect = UIBlurEffect(style: .extraLight)
+    init(style: UIBlurEffectStyle) {
+        
+        let blurEffect = UIBlurEffect(style: style)
         super.init(effect: blurEffect)
-
+        
         [ label, imageView, borderView ].forEach {
             if #available(iOS 11.0, *) {
                 contentView.addSubview($0)
@@ -71,7 +71,26 @@ class InfoView: UIVisualEffectView {
                 addSubview($0)
             }
         }
-
+        
+        status = Status(state: .scanning)
+    }
+    
+    /**
+     Creates a new instance of `InfoView`.
+     */
+    init() {
+        
+        let blurEffect = UIBlurEffect(style: .extraLight)
+        super.init(effect: blurEffect)
+        
+        [ label, imageView, borderView ].forEach {
+            if #available(iOS 11.0, *) {
+                contentView.addSubview($0)
+            } else {
+                addSubview($0)
+            }
+        }
+        
         status = Status(state: .scanning)
     }
 
