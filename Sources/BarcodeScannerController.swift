@@ -118,7 +118,7 @@ open class BarcodeScannerController: UIViewController {
                 captureDevice.unlockForConfiguration()
             } catch {}
 
-            flashButton.setImage(torchMode.image, for: UIControlState())
+            flashButton.setImage(torchMode.image, for: UIControl.State())
         }
     }
 
@@ -168,7 +168,7 @@ open class BarcodeScannerController: UIViewController {
 
         [ infoView, flashButton, focusView ].forEach {
             view.addSubview($0)
-            view.bringSubview(toFront: $0)
+            view.bringSubviewToFront($0)
         }
 
         torchMode = .off
@@ -178,7 +178,7 @@ open class BarcodeScannerController: UIViewController {
 
         NotificationCenter.default.addObserver(
                 self, selector: #selector(appWillEnterForeground),
-                name: NSNotification.Name.UIApplicationWillEnterForeground,
+                name: UIApplication.willEnterForegroundNotification,
                 object: nil)
     }
 
@@ -372,7 +372,7 @@ open class BarcodeScannerController: UIViewController {
         flashView.alpha = 1
 
         view.addSubview(flashView)
-        view.bringSubview(toFront: flashView)
+        view.bringSubviewToFront(flashView)
 
         UIView.animate(withDuration: 0.2,
                        animations: { flashView.alpha = 0.0  },
@@ -472,7 +472,7 @@ extension BarcodeScannerController: AVCaptureMetadataOutputObjectsDelegate {
          The Operating System has no way to recognize that this UPC-A label that was passed to it by the scanner device
          was initially an EAN-13 label beginning with a zero.
          */
-        var type = metadataObj.type
+        let type = metadataObj.type
         if type == AVMetadataObject.ObjectType.ean13 && code.hasPrefix("0") {
             code = String(code.suffix(12))
 //            type = AVMetadataObject.ObjectType.upca

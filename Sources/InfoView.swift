@@ -59,7 +59,7 @@ class InfoView: UIVisualEffectView {
     /**
      Creates a new instance of `InfoView`.
      */
-    init(style: UIBlurEffectStyle) {
+    init(style: UIBlurEffect.Style) {
         
         let blurEffect = UIBlurEffect(style: style)
         super.init(effect: blurEffect)
@@ -164,7 +164,7 @@ class InfoView: UIVisualEffectView {
 
      - Parameter style: The current blur style.
      */
-    func animate(blurStyle style: UIBlurEffectStyle) {
+    func animate(blurStyle style: UIBlurEffect.Style) {
 
         guard status.state == .processing else { return }
 
